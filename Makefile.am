@@ -52,6 +52,12 @@ else
 pinentry_gtk_2 =
 endif
 
+if BUILD_PINENTRY_EFL
+pinentry_efl = efl
+else
+pinentry_efl =
+endif
+
 if BUILD_PINENTRY_GNOME_3
 pinentry_gnome_3 = gnome3
 else
@@ -78,7 +84,7 @@ endif
 
 SUBDIRS = m4 secmem pinentry ${pinentry_curses} ${pinentry_tty} \
 	${pinentry_emacs} ${pinentry_gtk_2} ${pinentry_gnome_3} \
-	${pinentry_qt} ${pinentry_w32} ${pinentry_fltk} doc
+	${pinentry_qt} ${pinentry_w32} ${pinentry_fltk} ${pinentry_efl} doc
 
 
 install-exec-local:

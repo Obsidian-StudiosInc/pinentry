@@ -625,6 +625,42 @@ if test "$pinentry_fltk" != "no"; then
 fi
 AM_CONDITIONAL(BUILD_PINENTRY_FLTK, test "$pinentry_fltk" = "yes")
 
+dnl
+dnl Check for EFL pinentry program.
+dnl
+AC_ARG_ENABLE(pinentry-efl,
+            AC_HELP_STRING([--enable-pinentry-efl], [build efl pinentry]),
+            pinentry_efl=$enableval, pinentry_efl=maybe)
+
+dnl check for pkg-config
+if test "$pinentry_efl" != "no"; then
+        AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+	if test x"${PKG_CONFIG}" = xno ; then
+		pinentry_efl=no
+	fi
+fi
+
+dnl check for efl
+if test "$pinentry_efl" != "no"; then
+	AC_MSG_CHECKING([for EFL])
+	"${PKG_CONFIG}" --exists 'elementary >= 1.18'
+	if test $? -ne 0 ; then
+		AC_MSG_RESULT([no])
+		AC_MSG_ERROR([efl >= 1.18 is required for the efl frontend])
+	else
+		AC_MSG_RESULT([yes])
+			EFLCFLAGS=`"${PKG_CONFIG}" --cflags evas ecore ecore-x elementary`
+			EFLLIBS=`"${PKG_CONFIG}" --libs evas ecore ecore-x elementary`
+			AC_SUBST(EFLCFLAGS)
+			AC_SUBST(EFLLIBS)
+			if test "$pinentry_efl" != "no"
+			then
+			  pinentry_efl=yes
+			fi
+	fi
+fi
+AM_CONDITIONAL(BUILD_PINENTRY_EFL, test "$pinentry_efl" = "yes")
+
 # Figure out the default pinentry.  We are very conservative here.
 # Please change the order only after verifying that the preferred
 # pinentry really is better (more feature-complete and more secure).
@@ -650,7 +686,11 @@ else
             if test "$pinentry_fltk" = "yes"; then
               PINENTRY_DEFAULT=pinentry-fltk
             else
-              AC_MSG_ERROR([[No pinentry enabled.]])
+              if test "$pinentry_efl" = "yes"; then
+        	      PINENTRY_DEFAULT=pinentry-efl
+              else
+                AC_MSG_ERROR([[No pinentry enabled.]])
+              fi
             fi
           fi
         fi
@@ -727,6 +767,7 @@ curses/Makefile
 tty/Makefile
 emacs/Makefile
 gtk+-2/Makefile
+efl/Makefile
 gnome3/Makefile
 qt/Makefile
 w32/Makefile
@@ -748,6 +789,7 @@ AC_MSG_NOTICE([
 	TTY Pinentry .....: $pinentry_tty
 	Emacs Pinentry ...: $pinentry_emacs
 	GTK+-2 Pinentry ..: $pinentry_gtk_2
+	EFL Pinentry .....: $pinentry_efl
 	GNOME 3 Pinentry .: $pinentry_gnome_3
 	Qt Pinentry ......: $pinentry_qt $pinentry_qt_lib_version
 	W32 Pinentry .....: $pinentry_w32

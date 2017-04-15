@@ -352,6 +352,7 @@ create_window (pinentry_t ctx EINA_UNUSED)
     {
       msg = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->title);
       elm_win_title_set (win, msg);
+      free (msg);
     }
   if (pinentry->description)
     {
@@ -381,6 +382,7 @@ create_window (pinentry_t ctx EINA_UNUSED)
       else
 	msg = "";
       error_label = elm_label_add (box);
+      evas_object_color_set(error_label, 255, 0, 0, 255);
       evas_object_show (error_label);
       elm_object_text_set (error_label, msg);
       if (pinentry->error)
@@ -614,7 +616,7 @@ create_window (pinentry_t ctx EINA_UNUSED)
 	  free (msg);
 	}
       else
-	elm_object_text_set (w, "Okay");
+	elm_object_text_set (w, "Ok");
       image = elm_image_add (bbox);
       if (elm_icon_standard_set (image, "dialog-ok"))
         elm_object_content_set (w, image);

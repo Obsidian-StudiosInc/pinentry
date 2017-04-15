@@ -1,7 +1,7 @@
 /* pinentry-efl.c
    Copyright (C) 2017 Obsidian-Studios, Inc.
      Author William L. Thomson Jr. <wlt@o-sinc.com>
-   Copyright (C) 2017 Mike Blumenkrantz <zmike@osg.samsung.com>
+   Copyright (C) 2016 Mike Blumenkrantz <zmike@osg.samsung.com>
 
    Based on pinentry-gtk2.c
    Copyright (C) 1999 Robert Bihlmeyer <robbe@orcus.priv.at>
@@ -27,20 +27,25 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <Elementary.h>
-#include <assert.h>
-#include <math.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <Ecore_X.h>
 #include <gpg-error.h>
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-prototypes"
+#endif
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)
+#pragma GCC diagnostic pop
+#endif
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #else
 #include "getopt.h"
-#endif				/* HAVE_GETOPT_H */
+#endif /* HAVE_GETOPT_H */
 
 #include "pinentry.h"
 
@@ -48,12 +53,14 @@
 #include "pinentry-curses.h"
 #endif
 
-
 #define PGMNAME "pinentry-efl"
 
 #ifndef VERSION
-#  define VERSION
+#define VERSION
 #endif
+
+static int pargc;
+static char **pargv;
 
 static pinentry_t pinentry;
 static int grab_failed;
@@ -65,40 +72,27 @@ static Ecore_Timer *timer;
 static Evas_Object *win, *entry, *error_label, *repeat_entry, *qualitybar;
 static int confirm_mode;
 
-const static int height = 190;
-const static int width = 400;
+const static int width = 480;
 const static int padding = 5;
-const static int button_height = 30;
-const static int button_width = 100;
 
 static void
 quit ()
 {
+/*
   evas_object_del(win);
   elm_exit();
+*/
+  ecore_main_loop_quit ();
 }
 
 static void
-delete_event (void *data, Evas_Object *obj, void *event)
+delete_event (void *data EINA_UNUSED,
+              Evas_Object *obj EINA_UNUSED,
+              void *event EINA_UNUSED)
 {
-  (void)data;
-  (void)obj;
-  (void)event;
-
   pinentry->close_button = 1;
-  quit ();
 }
 
-static void
-on_cancel (void *data, Evas_Object *obj, void *event)
-{
-  (void)data;
-  (void)obj;
-  (void)event;
-
-  confirm_value = CONFIRM_CANCEL;
-  quit();
-}
 static void
 changed_text_handler (Evas_Object *obj)
 {
@@ -140,13 +134,12 @@ changed_text_handler (Evas_Object *obj)
       textbuf[sizeof textbuf -1] = 0;
       evas_object_color_set(qualitybar, 0, 255, 0, 255);
     }
-
-  elm_obj_progressbar_part_value_set (qualitybar, (double)percent/100.0);
+  elm_progressbar_value_set (qualitybar, (double) percent / 100.0);
   elm_object_text_set (qualitybar, textbuf);
 }
 
 static void
-on_check (void *data, Evas_Object *obj, void *event)
+on_check (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED)
 {
     if(elm_check_selected_get(obj))
         elm_entry_password_set(entry, EINA_FALSE);
@@ -155,57 +148,64 @@ on_check (void *data, Evas_Object *obj, void *event)
 }
 
 static void
-on_click (void *data, Evas_Object *obj, void *event)
+on_click (void *data, Evas_Object *obj EINA_UNUSED, void *event EINA_UNUSED)
 {
-  confirm_value = CONFIRM_OK;
   if (confirm_mode)
     {
       confirm_value = (confirm_value_t) data;
-      elm_exit ();
-
+      quit ();
       return;
     }
+
   if (data)
     {
       const char *s, *s2;
 
-      s = elm_object_text_get (entry);
+      s = elm_entry_entry_get (entry);
       if (!s)
 	s = "";
 
       if (pinentry->repeat_passphrase && repeat_entry)
-        {
-          s2 = elm_object_text_get (repeat_entry);
-          if (!s2)
-            s2 = "";
-          if (strcmp (s, s2))
-            {
+	{
+	  s2 = elm_entry_entry_get (repeat_entry);
+	  if (!s2)
+	    s2 = "";
+	  if (strcmp (s, s2))
+	    {
               elm_object_text_set(error_label,
                                   pinentry->repeat_error_string?
                                   pinentry->repeat_error_string:
-                                  "not correctly repeated");
+				   "not correctly repeated");
               elm_object_focus_set(entry,EINA_TRUE);
               return;
-            }
-          pinentry->repeat_okay = 1;
-        }
+	    }
+	  pinentry->repeat_okay = 1;
+	}
 
       passphrase_ok = 1;
       pinentry_setbufferlen (pinentry, strlen (s) + 1);
       if (pinentry->pin)
 	strcpy (pinentry->pin, s);
     }
-  quit();
+  quit ();
+}
+
+static void
+enter_callback (void *data, Evas_Object * obj, void *event_info EINA_UNUSED)
+{
+  if (data)
+    elm_object_focus_set (data, 1);
+  else
+    on_click ((void *) CONFIRM_OK, obj, NULL);
 }
 
 static Eina_Bool
 timeout_cb (const void * data)
 {
-  printf("timeout_cb called\n");
   pinentry_t pe = (pinentry_t)data;
   if (!got_input)
     {
-      quit();
+      ecore_main_loop_quit();
       if (pe)
         pe->specific_err = gpg_error (GPG_ERR_TIMEOUT);
     }
@@ -218,10 +218,8 @@ static Evas_Object *
 create_window (pinentry_t ctx)
 {
   char *txt;
-  Evas_Object *hbox, *table, *obj, *ok, *cancel;
+  Evas_Object *hbox, *table, *obj;
   int row = 0;
-
-  elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
   win = elm_win_util_standard_add("pinentry","enter pin");
   elm_win_autodel_set(win, EINA_TRUE);
@@ -276,6 +274,8 @@ create_window (pinentry_t ctx)
       row++;
     }
 
+  qualitybar = NULL;
+
   if (!confirm_mode)
     {
 
@@ -317,35 +317,31 @@ create_window (pinentry_t ctx)
 
       if (pinentry->quality_bar)
 	{
+          /* Quality Bar Label */
           txt = elm_entry_utf8_to_markup (pinentry->quality_bar);
-/*
-	  qualitybar_label = elm_label_add(table);
-          elm_object_text_set(qualitybar_label,txt);
-          evas_object_size_hint_weight_set(qualitybar_label, 0, 0);
-          evas_object_size_hint_align_set(qualitybar_label, 0, 0);
-          elm_table_pack(table, qualitybar_label, 0, row, 1, 1);
-*/
+	  obj = elm_label_add(table);
+          elm_object_text_set(obj,txt);
+          free (txt);
+          evas_object_size_hint_weight_set(obj, 0, 0);
+          evas_object_size_hint_align_set(obj, 0, 0);
+          elm_table_pack(table, obj, 1, row, 1, 1);
+          evas_object_show(obj);
 
 	  qualitybar = elm_progressbar_add(table);
-
-          elm_progressbar_unit_format_set(qualitybar, "%1.2f%%");
+          elm_object_text_set(qualitybar," ");
+          evas_object_show(obj);
+	  elm_progressbar_unit_format_set (qualitybar, "%");
 /*
-          elm_object_text_set(qualitybar,txt);
           elm_progressbar_pulse_set(qualitybar, EINA_TRUE);
-          elm_progressbar_pulse(qualitybar, EINA_TRUE
-	  elm_obj_progressbar_part_value_set (qualitybar, 0.0);
+          elm_progressbar_pulse(qualitybar, EINA_TRUE);
+	  elm_progressbar_value_set (qualitybar, 0.0);
 */
           if (pinentry->quality_bar_tt)
-	    {
-	      elm_object_tooltip_text_set (qualitybar,
-					   pinentry->quality_bar_tt);
-	    }
-/*
-          evas_object_size_hint_weight_set(qualitybar, 0, 0);
-          evas_object_size_hint_align_set(qualitybar, EVAS_HINT_FILL, 0);
-*/
+	    elm_object_tooltip_text_set (qualitybar,
+					 pinentry->quality_bar_tt);
+          evas_object_size_hint_weight_set(obj, EVAS_HINT_EXPAND, 0);
+          evas_object_size_hint_align_set(obj, EVAS_HINT_FILL, 0);
           elm_table_pack(table, qualitybar, 1, row, 4, 1);
-          free (txt);
           row++;
 	}
 
@@ -365,83 +361,90 @@ create_window (pinentry_t ctx)
 	  free (txt);
           row++;
         }
+
+      /* When the user presses enter in the entry widget, the widget
+         is activated.  If we have a repeat entry, send the focus to
+         it.  Otherwise, activate the "Ok" button.  */
+      evas_object_smart_callback_add (entry, "activate", enter_callback,
+				      repeat_entry);
   }
   
+  /* Cancel Button */
   if (!pinentry->one_button)
     {
-      cancel = elm_button_add(table);
+      obj = elm_button_add(table);
       if (pinentry->cancel)
         {
-          txt = elm_entry_utf8_to_markup (pinentry->cancel);
-          elm_object_text_set(cancel,txt);
+          txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->cancel);
+          elm_object_text_set(obj,txt);
           free (txt);
         }
       else if (pinentry->default_cancel)
         {
           Evas_Object *ic;
 
-          txt = elm_entry_utf8_to_markup (pinentry->default_cancel);
-          elm_object_text_set(cancel,txt);
+          txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->default_cancel);
+          elm_object_text_set(obj,txt);
           free (txt);
-/*
-          ic = elm_icon_add(cancel);
-          elm_image_file_set(ic, "icon.png", NULL); //STOCK_CANCEL
-          elm_object_part_content_set(cancel, "icon", ic);
-*/
+          ic = elm_image_add (win);
+          if (elm_icon_standard_set (ic, "dialog-cancel"))
+            elm_object_content_set (obj, ic);
+          else
+            evas_object_del(ic);
         }
       else
-        elm_object_text_set(cancel, " Cancel  "); //STOCK_CANCEL
-      evas_object_size_hint_align_set(cancel, 0, 0);
-      elm_table_pack(table, cancel, 4, row, 1, 1);
-      evas_object_smart_callback_add(cancel, "clicked", on_cancel, win);
-      evas_object_show(cancel);
+        elm_object_text_set(obj, " Cancel  "); //STOCK_CANCEL
+      evas_object_size_hint_align_set(obj, 0, 0);
+      elm_table_pack(table, obj, 4, row, 1, 1);
+      evas_object_smart_callback_add(obj, "clicked", on_click, (void *) CONFIRM_CANCEL);
+      evas_object_show(obj);
     }
-   
-  ok = elm_button_add(table);
+
+  /* OK Button */
+  obj = elm_button_add(table);
   if (pinentry->ok)
     {
-      txt = elm_entry_utf8_to_markup (pinentry->ok);
-      elm_object_text_set(ok,txt);
+      txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->ok);
+      elm_object_text_set(obj,txt);
       free (txt);
     }
   else if (pinentry->default_ok)
     {
       Evas_Object *ic;
 
-      txt = elm_entry_utf8_to_markup (pinentry->ok);
-      elm_object_text_set(ok,txt);
+      txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->default_ok);
+      elm_object_text_set(obj,txt);
       free (txt);
-/*
-      ic = elm_icon_add(ok);
-      elm_image_file_set(ic, "icon.png", NULL);//STOCK_OK
-      elm_object_part_content_set(ok, "icon", ic);
-*/
+      ic = elm_image_add (win);
+      if (elm_icon_standard_set (ic, "dialog-ok"))
+        elm_object_content_set (obj, ic);
+      else
+        evas_object_del(ic);
     }
   else
-    elm_object_text_set(ok,"    OK     "); //STOCK_OK
-  evas_object_size_hint_align_set(ok, 0, 0);
-  elm_table_pack(table, ok, 5, row, 1, 1);
-  evas_object_smart_callback_add(ok, "clicked", on_click, win);
-  evas_object_show(ok);
+    elm_object_text_set(obj,"    OK     "); //STOCK_OK
+  evas_object_size_hint_align_set(obj, 0, 0);
+  elm_table_pack(table, obj, 5, row, 1, 1);
+  evas_object_smart_callback_add(obj, "clicked", on_click, (void *) CONFIRM_OK);
+  evas_object_show(obj);
 
+  /* Key/Lock Icon */
   obj = elm_icon_add (win);
   evas_object_size_hint_aspect_set (obj, EVAS_ASPECT_CONTROL_BOTH, 1, 1);
   /* FIXME: need some sort of key icon... */
   if (elm_icon_standard_set (obj, "system-lock-screen"))
     {
-      evas_object_size_hint_min_set(obj, ELM_SCALE_SIZE(width/5), ELM_SCALE_SIZE(width/5));
+      int ic_size = ELM_SCALE_SIZE(width/5);
+      if(row<4)
+        ic_size = ic_size - ic_size/row;
+      evas_object_size_hint_min_set(obj, ic_size, ic_size);
       evas_object_size_hint_weight_set(obj, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
       evas_object_size_hint_align_set(obj, EVAS_HINT_FILL, 0.5);
       elm_table_pack(table, obj, 0, 0, 1, row);
       evas_object_show (obj);
     }
   else
-    {
-       evas_object_del(obj);
-/*
-       noimage = EINA_TRUE;
-*/
-    }
+      evas_object_del(obj);
 
   elm_win_resize_object_add(win,table);
   elm_win_center(win,EINA_TRUE,EINA_TRUE);
@@ -455,27 +458,31 @@ create_window (pinentry_t ctx)
 }
 
 static int
-elm_cmd_handler (pinentry_t pe)
+efl_cmd_handler (pinentry_t pe)
 {
   Evas_Object *w;
-  int want_pass = !!pe->pin;
+  int want_pass = ! !pe->pin;
 
   got_input = EINA_FALSE;
   pinentry = pe;
   confirm_value = CONFIRM_CANCEL;
   passphrase_ok = 0;
   confirm_mode = want_pass ? 0 : 1;
-
+  /* init ecore-x explicitly using DISPLAY since this can launch
+   * from console
+   */
+  if (pe->display)
+    ecore_x_init (pe->display);
+  elm_init (pargc, pargv);
   w = create_window (pe);
-  elm_run();
+  ecore_main_loop_begin ();
+  evas_object_del (w);
 
-/*
   if (timer)
     {
       ecore_timer_del (timer);
       timer = NULL;
     }
-*/
 
   if (confirm_value == CONFIRM_CANCEL || grab_failed)
     pe->canceled = 1;
@@ -492,16 +499,21 @@ elm_cmd_handler (pinentry_t pe)
     return (confirm_value == CONFIRM_OK) ? 1 : 0;
 }
 
-pinentry_cmd_handler_t pinentry_cmd_handler = elm_cmd_handler;
+pinentry_cmd_handler_t pinentry_cmd_handler = efl_cmd_handler;
 
 int
 main (int argc, char *argv[])
 {
   pinentry_init (PGMNAME);
 
-  elm_init (argc, argv);
+#ifdef FALLBACK_CURSES
+  if (!pinentry_have_display (argc, argv))
+    pinentry_cmd_handler = curses_cmd_handler;
+#endif
 
   pinentry_parse_opts (argc, argv);
+  pargc = argc;
+  pargv = argv;
 
   if (pinentry_loop ())
     return 1;

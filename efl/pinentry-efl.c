@@ -72,7 +72,9 @@ static Ecore_Timer *timer;
 static Evas_Object *win, *entry, *error_label, *repeat_entry, *qualitybar;
 static int confirm_mode;
 
-const static int width = 480;
+const static int WIDTH = 480;
+const static int BUTTON_HEIGHT = 27;
+const static int BUTTON_WIDTH = 60;
 const static int padding = 5;
 
 static void
@@ -227,7 +229,7 @@ create_window (pinentry_t ctx)
 
   table = elm_table_add(win);
   elm_obj_table_padding_set(table, padding, padding);
-  evas_object_size_hint_min_set(table, ELM_SCALE_SIZE(width), 1);
+  evas_object_size_hint_min_set(table, ELM_SCALE_SIZE(WIDTH), 1);
   evas_object_show(table);
 
   if (pinentry->title)
@@ -318,8 +320,8 @@ create_window (pinentry_t ctx)
       if (pinentry->quality_bar)
 	{
           /* Quality Bar Label */
-          txt = elm_entry_utf8_to_markup (pinentry->quality_bar);
 	  obj = elm_label_add(table);
+          txt = elm_entry_utf8_to_markup (pinentry->quality_bar);
           elm_object_text_set(obj,txt);
           free (txt);
           evas_object_size_hint_weight_set(obj, 0, 0);
@@ -329,7 +331,7 @@ create_window (pinentry_t ctx)
 
 	  qualitybar = elm_progressbar_add(table);
           elm_object_text_set(qualitybar," ");
-          evas_object_show(obj);
+          evas_object_show(qualitybar);
 	  elm_progressbar_unit_format_set (qualitybar, "%");
 /*
           elm_progressbar_pulse_set(qualitybar, EINA_TRUE);
@@ -339,8 +341,8 @@ create_window (pinentry_t ctx)
           if (pinentry->quality_bar_tt)
 	    elm_object_tooltip_text_set (qualitybar,
 					 pinentry->quality_bar_tt);
-          evas_object_size_hint_weight_set(obj, EVAS_HINT_EXPAND, 0);
-          evas_object_size_hint_align_set(obj, EVAS_HINT_FILL, 0);
+          evas_object_size_hint_weight_set(qualitybar, EVAS_HINT_EXPAND, 0);
+          evas_object_size_hint_align_set(qualitybar, EVAS_HINT_FILL, 0);
           elm_table_pack(table, qualitybar, 1, row, 4, 1);
           row++;
 	}
@@ -393,8 +395,9 @@ create_window (pinentry_t ctx)
             evas_object_del(ic);
         }
       else
-        elm_object_text_set(obj, " Cancel  "); //STOCK_CANCEL
+        elm_object_text_set(obj, "Cancel"); //STOCK_CANCEL
       evas_object_size_hint_align_set(obj, 0, 0);
+      evas_object_size_hint_min_set(obj, ELM_SCALE_SIZE(BUTTON_WIDTH), ELM_SCALE_SIZE(BUTTON_HEIGHT));
       elm_table_pack(table, obj, 4, row, 1, 1);
       evas_object_smart_callback_add(obj, "clicked", on_click, (void *) CONFIRM_CANCEL);
       evas_object_show(obj);
@@ -422,8 +425,9 @@ create_window (pinentry_t ctx)
         evas_object_del(ic);
     }
   else
-    elm_object_text_set(obj,"    OK     "); //STOCK_OK
+    elm_object_text_set(obj,"OK"); //STOCK_OK
   evas_object_size_hint_align_set(obj, 0, 0);
+  evas_object_size_hint_min_set(obj, ELM_SCALE_SIZE(BUTTON_WIDTH), ELM_SCALE_SIZE(BUTTON_HEIGHT));
   elm_table_pack(table, obj, 5, row, 1, 1);
   evas_object_smart_callback_add(obj, "clicked", on_click, (void *) CONFIRM_OK);
   evas_object_show(obj);
@@ -434,7 +438,7 @@ create_window (pinentry_t ctx)
   /* FIXME: need some sort of key icon... */
   if (elm_icon_standard_set (obj, "system-lock-screen"))
     {
-      int ic_size = ELM_SCALE_SIZE(width/5);
+      int ic_size = ELM_SCALE_SIZE(WIDTH/5);
       if(row<4)
         ic_size = ic_size - ic_size/row;
       evas_object_size_hint_min_set(obj, ic_size, ic_size);
@@ -461,7 +465,7 @@ static int
 efl_cmd_handler (pinentry_t pe)
 {
   Evas_Object *w;
-  int want_pass = ! !pe->pin;
+  int want_pass = !!pe->pin;
 
   got_input = EINA_FALSE;
   pinentry = pe;

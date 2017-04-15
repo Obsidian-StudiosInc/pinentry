@@ -96,7 +96,7 @@ delete_event (void *data EINA_UNUSED,
 }
 
 static void
-changed_text_handler (Evas_Object *obj)
+changed_text_handler (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED)
 {
   char textbuf[50];
   const char *s;
@@ -230,6 +230,8 @@ create_window (pinentry_t ctx)
   table = elm_table_add(win);
   elm_obj_table_padding_set(table, padding, padding);
   evas_object_size_hint_min_set(table, ELM_SCALE_SIZE(WIDTH), 1);
+  evas_object_size_hint_padding_set (table, ELM_SCALE_SIZE(padding), ELM_SCALE_SIZE(padding),
+                                     ELM_SCALE_SIZE(padding), ELM_SCALE_SIZE(padding));
   evas_object_show(table);
 
   if (pinentry->title)
@@ -297,7 +299,7 @@ create_window (pinentry_t ctx)
       evas_object_size_hint_weight_set(entry, 0, 0);
       evas_object_size_hint_align_set(entry, EVAS_HINT_FILL, 0);
       elm_table_pack(table, entry, 2, row, 4, 1);
-      evas_object_smart_callback_add(entry, "changed", changed_text_handler, win);
+      evas_object_smart_callback_add(entry, "changed", changed_text_handler, NULL);
       evas_object_show(entry);
       row++;
 
@@ -325,7 +327,7 @@ create_window (pinentry_t ctx)
           elm_object_text_set(obj,txt);
           free (txt);
           evas_object_size_hint_weight_set(obj, 0, 0);
-          evas_object_size_hint_align_set(obj, 0, 0);
+          evas_object_size_hint_align_set(obj, 1, 0);
           elm_table_pack(table, obj, 1, row, 1, 1);
           evas_object_show(obj);
 
@@ -333,17 +335,14 @@ create_window (pinentry_t ctx)
           elm_object_text_set(qualitybar," ");
           evas_object_show(qualitybar);
 	  elm_progressbar_unit_format_set (qualitybar, "%");
-/*
           elm_progressbar_pulse_set(qualitybar, EINA_TRUE);
           elm_progressbar_pulse(qualitybar, EINA_TRUE);
-	  elm_progressbar_value_set (qualitybar, 0.0);
-*/
           if (pinentry->quality_bar_tt)
 	    elm_object_tooltip_text_set (qualitybar,
 					 pinentry->quality_bar_tt);
           evas_object_size_hint_weight_set(qualitybar, EVAS_HINT_EXPAND, 0);
           evas_object_size_hint_align_set(qualitybar, EVAS_HINT_FILL, 0);
-          elm_table_pack(table, qualitybar, 1, row, 4, 1);
+          elm_table_pack(table, qualitybar, 2, row, 4, 1);
           row++;
 	}
 
@@ -359,16 +358,13 @@ create_window (pinentry_t ctx)
           evas_object_size_hint_weight_set(repeat_entry, 0, 0);
           evas_object_size_hint_align_set(repeat_entry, EVAS_HINT_FILL, 0);
           elm_table_pack(table, repeat_entry, 2, row, 4, 1);
+	  evas_object_smart_callback_add (repeat_entry, "activated",
+					  enter_callback, NULL);
           evas_object_show(repeat_entry);
 	  free (txt);
           row++;
         }
-
-      /* When the user presses enter in the entry widget, the widget
-         is activated.  If we have a repeat entry, send the focus to
-         it.  Otherwise, activate the "Ok" button.  */
-      evas_object_smart_callback_add (entry, "activate", enter_callback,
-				      repeat_entry);
+      evas_object_smart_callback_add (entry, "activated", enter_callback, repeat_entry);
   }
   
   /* Cancel Button */
@@ -450,10 +446,16 @@ create_window (pinentry_t ctx)
   else
       evas_object_del(obj);
 
-  elm_win_resize_object_add(win,table);
+  /* Box for padding */
+  obj = elm_box_add (win);
+  elm_box_pack_end (obj, table);
+  evas_object_show (obj);
+
+  elm_win_resize_object_add(win,obj);
   elm_win_center(win,EINA_TRUE,EINA_TRUE);
-  elm_win_raise(win);
+  elm_win_layer_set(win,10);
   evas_object_show(win);
+  elm_object_focus_set (entry, 1);
 
   if (pinentry->timeout > 0)
     timer = ecore_timer_add (pinentry->timeout, timeout_cb, pinentry);

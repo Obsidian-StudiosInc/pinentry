@@ -424,20 +424,30 @@ AC_ARG_ENABLE(pinentry-efl,
             AC_HELP_STRING([--enable-pinentry-efl], [build EFL pinentry]),
             pinentry_efl=$enableval, pinentry_efl=maybe)
 
+dnl check for pkg-config
+if test "$pinentry_efl" != "no"; then
+	AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+	if test x"${PKG_CONFIG}" = xno ; then
+		pinentry_efl=no
+	fi
+fi
+
 if test "$pinentry_efl" != "no"; then
 	AC_MSG_CHECKING([for efl])
-	"${PKG_CONFIG}" --exists elementary
+	"${PKG_CONFIG}" --exists 'elementary >=1.18'
 	if test $? -ne 0 ; then
 		AC_MSG_RESULT([no])
-		AC_MSG_WARN([pkg-config could not find the module elementary/efl])
-		pinentry_efl=no
+		AC_MSG_WARN([efl >= 1.18 is required for efl pinentry])
 	else
 		AC_MSG_RESULT([yes])
-		EFL_CFLAGS=`"${PKG_CONFIG}" --cflags elementary`
-		EFL_LIBS=`"${PKG_CONFIG}" --libs elementary`
+		EFL_CFLAGS=`"${PKG_CONFIG}" --cflags ecore-x elementary`
+		EFL_LIBS=`"${PKG_CONFIG}" --libs ecore-x elementary`
 		AC_SUBST(EFL_CFLAGS)
 		AC_SUBST(EFL_LIBS)
-		pinentry_efl=yes
+		if test "$pinentry_efl" != "no"
+		then
+			pinentry_efl=yes
+		fi
 	fi
 fi
 AM_CONDITIONAL(BUILD_PINENTRY_EFL, test "$pinentry_efl" = "yes")

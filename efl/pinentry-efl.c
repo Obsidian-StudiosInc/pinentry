@@ -75,7 +75,7 @@ static int confirm_mode;
 const static int WIDTH = 480;
 const static int BUTTON_HEIGHT = 27;
 const static int BUTTON_WIDTH = 60;
-const static int padding = 5;
+const static int PADDING = 5;
 
 static void
 quit ()
@@ -127,15 +127,14 @@ changed_text_handler (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA
     {
       snprintf (textbuf, sizeof textbuf, "(%d%%)", -percent);
       textbuf[sizeof textbuf -1] = 0;
-      evas_object_color_set(qualitybar, 255, 0, 0, 255);
       percent = -percent;
     }
   else
     {
       snprintf (textbuf, sizeof textbuf, "%d%%", percent);
       textbuf[sizeof textbuf -1] = 0;
-      evas_object_color_set(qualitybar, 0, 255, 0, 255);
     }
+  evas_object_color_set(qualitybar, 255 - ( 2.55 * percent ), 2.55 * percent, 0, 255);
   elm_progressbar_value_set (qualitybar, (double) percent / 100.0);
   elm_object_text_set (qualitybar, textbuf);
 }
@@ -228,10 +227,10 @@ create_window (pinentry_t ctx)
   evas_object_smart_callback_add(win, "delete,request", delete_event, NULL);
 
   table = elm_table_add(win);
-  elm_obj_table_padding_set(table, padding, padding);
+  elm_obj_table_padding_set(table, ELM_SCALE_SIZE(PADDING), ELM_SCALE_SIZE(PADDING));
   evas_object_size_hint_min_set(table, ELM_SCALE_SIZE(WIDTH), 1);
-  evas_object_size_hint_padding_set (table, ELM_SCALE_SIZE(padding), ELM_SCALE_SIZE(padding),
-                                     ELM_SCALE_SIZE(padding), ELM_SCALE_SIZE(padding));
+  evas_object_size_hint_padding_set (table, ELM_SCALE_SIZE(PADDING), ELM_SCALE_SIZE(PADDING),
+                                     ELM_SCALE_SIZE(PADDING), ELM_SCALE_SIZE(PADDING));
   evas_object_show(table);
 
   if (pinentry->title)
@@ -307,7 +306,7 @@ create_window (pinentry_t ctx)
       obj = elm_check_add(table);
       evas_object_size_hint_align_set(obj, 1, 0);
       elm_table_pack(table, obj, 1, row, 1, 1);
-      evas_object_smart_callback_add(obj, "changed", on_check, win);
+      evas_object_smart_callback_add(obj, "changed", on_check, NULL);
       evas_object_show(obj);
 
       /* Check Label */
@@ -333,10 +332,13 @@ create_window (pinentry_t ctx)
 
 	  qualitybar = elm_progressbar_add(table);
           elm_object_text_set(qualitybar," ");
+          evas_object_color_set(qualitybar, 255, 0, 0, 255);
           evas_object_show(qualitybar);
 	  elm_progressbar_unit_format_set (qualitybar, "%");
+/*
           elm_progressbar_pulse_set(qualitybar, EINA_TRUE);
           elm_progressbar_pulse(qualitybar, EINA_TRUE);
+*/
           if (pinentry->quality_bar_tt)
 	    elm_object_tooltip_text_set (qualitybar,
 					 pinentry->quality_bar_tt);
@@ -365,6 +367,7 @@ create_window (pinentry_t ctx)
           row++;
         }
       evas_object_smart_callback_add (entry, "activated", enter_callback, repeat_entry);
+      elm_object_focus_set (entry, EINA_TRUE);
   }
   
   /* Cancel Button */
@@ -434,13 +437,15 @@ create_window (pinentry_t ctx)
   /* FIXME: need some sort of key icon... */
   if (elm_icon_standard_set (obj, "system-lock-screen"))
     {
-      int ic_size = ELM_SCALE_SIZE(WIDTH/5);
-      if(row<4)
+      double ic_size = WIDTH/5;
+      if(row==0)
+        ic_size = ic_size/3.5;
+      else if(row<4)
         ic_size = ic_size - ic_size/row;
-      evas_object_size_hint_min_set(obj, ic_size, ic_size);
+      evas_object_size_hint_min_set(obj, ELM_SCALE_SIZE(ic_size), ELM_SCALE_SIZE(ic_size));
       evas_object_size_hint_weight_set(obj, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
       evas_object_size_hint_align_set(obj, EVAS_HINT_FILL, 0.5);
-      elm_table_pack(table, obj, 0, 0, 1, row);
+      elm_table_pack(table, obj, 0, 0, 1, row? row:1);
       evas_object_show (obj);
     }
   else
@@ -455,7 +460,6 @@ create_window (pinentry_t ctx)
   elm_win_center(win,EINA_TRUE,EINA_TRUE);
   elm_win_layer_set(win,10);
   evas_object_show(win);
-  elm_object_focus_set (entry, 1);
 
   if (pinentry->timeout > 0)
     timer = ecore_timer_add (pinentry->timeout, timeout_cb, pinentry);

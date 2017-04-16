@@ -80,10 +80,8 @@ const static int PADDING = 5;
 static void
 quit ()
 {
-/*
   evas_object_del(win);
   elm_exit();
-*/
   ecore_main_loop_quit ();
 }
 
@@ -93,6 +91,7 @@ delete_event (void *data EINA_UNUSED,
               void *event EINA_UNUSED)
 {
   pinentry->close_button = 1;
+  quit ();
 }
 
 static void
@@ -493,7 +492,6 @@ efl_cmd_handler (pinentry_t pe)
   elm_init (pargc, pargv);
   w = create_window (pe);
   ecore_main_loop_begin ();
-  evas_object_del (w);
 
   if (timer)
     {

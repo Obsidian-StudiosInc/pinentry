@@ -219,7 +219,7 @@ static Evas_Object *
 create_window (pinentry_t ctx)
 {
   char *txt;
-  Evas_Object *hbox, *table, *obj;
+  Evas_Object *table, *obj;
   int row = 0;
 
   win = elm_win_util_standard_add("pinentry","enter pin");
@@ -282,13 +282,18 @@ create_window (pinentry_t ctx)
   if (!confirm_mode)
     {
 
-      /* Entry Label */
-      obj = elm_label_add(table);
-      elm_object_text_set(obj,"Passphrase:");
-      evas_object_size_hint_weight_set(obj, 0, 0);
-      evas_object_size_hint_align_set(obj, 1, 0);
-      elm_table_pack(table, obj, 1, row, 1, 1);
-      evas_object_show(obj);
+    if (pinentry->prompt)
+      {
+        /* Entry/Prompt Label */
+        obj = elm_label_add(table);
+        txt = elm_entry_utf8_to_markup(pinentry->prompt);
+        elm_object_text_set(obj,txt);
+        free (txt);
+        evas_object_size_hint_weight_set(obj, 0, 0);
+        evas_object_size_hint_align_set(obj, 1, 0);
+        elm_table_pack(table, obj, 1, row, 1, 1);
+        evas_object_show(obj);
+      }
 
       entry = elm_entry_add(table);
       elm_entry_scrollable_set(entry, EINA_TRUE);
@@ -311,7 +316,7 @@ create_window (pinentry_t ctx)
 
       /* Check Label */
       obj = elm_label_add(table);
-      elm_object_text_set(obj,"Make passphrase visible");
+      elm_object_text_set(obj,"Make visible");
       evas_object_size_hint_weight_set(obj, 0, 0);
       evas_object_size_hint_align_set(obj, 0, 0);
       elm_table_pack(table, obj, 2, row, 4, 1);

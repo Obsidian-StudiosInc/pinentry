@@ -434,10 +434,11 @@ fi
 
 if test "$pinentry_efl" != "no"; then
 	AC_MSG_CHECKING([for efl])
-	"${PKG_CONFIG}" --exists 'elementary >=1.18'
+	"${PKG_CONFIG}" --exists 'elementary >= 1.18'
 	if test $? -ne 0 ; then
 		AC_MSG_RESULT([no])
 		AC_MSG_WARN([efl >= 1.18 is required for efl pinentry])
+		pinentry_efl=no
 	else
 		AC_MSG_RESULT([yes])
 		EFL_CFLAGS=`"${PKG_CONFIG}" --cflags ecore-x elementary`

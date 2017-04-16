@@ -235,7 +235,8 @@ create_window (pinentry_t ctx)
 
   if (pinentry->title)
     {
-      txt = elm_entry_utf8_to_markup(pinentry->title);
+      txt = pinentry_utf8_to_local (pinentry->lc_ctype,
+                                    pinentry->title);
       elm_win_title_set ( win, txt );
       free (txt);
     }
@@ -245,7 +246,7 @@ create_window (pinentry_t ctx)
       /* Description Label */
       obj = elm_label_add(table);
       elm_label_line_wrap_set (obj, ELM_WRAP_WORD);
-      txt = elm_entry_utf8_to_markup(pinentry->description);
+      txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->description);
       elm_object_text_set(obj,txt);
       free (txt);
       evas_object_size_hint_weight_set(obj, EVAS_HINT_EXPAND, 0);
@@ -258,7 +259,7 @@ create_window (pinentry_t ctx)
     {
     /* Error Label */
     if (pinentry->error)
-        txt = elm_entry_utf8_to_markup (pinentry->error);
+        txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->error);
       else
         txt = "";
       obj = elm_label_add(table);
@@ -286,7 +287,7 @@ create_window (pinentry_t ctx)
       {
         /* Entry/Prompt Label */
         obj = elm_label_add(table);
-        txt = elm_entry_utf8_to_markup(pinentry->prompt);
+        txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->prompt);
         elm_object_text_set(obj,txt);
         free (txt);
         evas_object_size_hint_weight_set(obj, 0, 0);
@@ -327,7 +328,7 @@ create_window (pinentry_t ctx)
 	{
           /* Quality Bar Label */
 	  obj = elm_label_add(table);
-          txt = elm_entry_utf8_to_markup (pinentry->quality_bar);
+          txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->quality_bar);
           elm_object_text_set(obj,txt);
           free (txt);
           evas_object_size_hint_weight_set(obj, 0, 0);
@@ -355,7 +356,8 @@ create_window (pinentry_t ctx)
 
       if (pinentry->repeat_passphrase)
         {
-	  txt = elm_entry_utf8_to_markup (pinentry->repeat_passphrase);
+	  txt = pinentry_utf8_to_local (pinentry->lc_ctype,
+                                        pinentry->repeat_passphrase);
           repeat_entry = elm_entry_add(table);
           elm_entry_scrollable_set(repeat_entry, EINA_TRUE);
           elm_scroller_policy_set(repeat_entry, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_OFF);
@@ -374,7 +376,7 @@ create_window (pinentry_t ctx)
       evas_object_smart_callback_add (entry, "activated", enter_callback, repeat_entry);
       elm_object_focus_set (entry, EINA_TRUE);
   }
-  
+
   /* Cancel Button */
   if (!pinentry->one_button)
     {

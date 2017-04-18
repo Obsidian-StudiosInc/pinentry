@@ -1,13 +1,12 @@
 /* pinentry-efl.c
    Copyright (C) 2017 Obsidian-Studios, Inc.
      Author William L. Thomson Jr. <wlt@o-sinc.com>
-   Copyright (C) 2016 Mike Blumenkrantz <zmike@osg.samsung.com>
 
    Based on pinentry-gtk2.c
    Copyright (C) 1999 Robert Bihlmeyer <robbe@orcus.priv.at>
    Copyright (C) 2001, 2002, 2007, 2015 g10 Code GmbH
    Copyright (C) 2004 by Albrecht Dreß <albrecht.dress@arcor.de>
- 
+
    pinentry-efl is a pinentry application for the EFL widget set.
    It tries to follow the Gnome Human Interface Guide as close as
    possible.

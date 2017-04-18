@@ -197,7 +197,7 @@ timeout_cb (const void * data)
   return ECORE_CALLBACK_DONE;
 }
 
-static Evas_Object *
+static void
 create_window (pinentry_t ctx)
 {
   char *txt;
@@ -446,14 +446,11 @@ create_window (pinentry_t ctx)
 
   if (pinentry->timeout > 0)
     timer = ecore_timer_add (pinentry->timeout, timeout_cb, pinentry);
-
-  return win;
 }
 
 static int
 efl_cmd_handler (pinentry_t pe)
 {
-  Evas_Object *w;
   int want_pass = !!pe->pin;
 
   got_input = EINA_FALSE;
@@ -467,7 +464,7 @@ efl_cmd_handler (pinentry_t pe)
   if (pe->display)
     ecore_x_init (pe->display);
   elm_init (pargc, pargv);
-  w = create_window (pe);
+  create_window (pe);
   ecore_main_loop_begin ();
 
   if (timer)

@@ -97,7 +97,6 @@ delete_event (void *data EINA_UNUSED,
 static void
 changed_text_handler (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED)
 {
-  char textbuf[50];
   const char *s;
   int length;
   int percent;
@@ -118,24 +117,8 @@ changed_text_handler (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA
     s = "";
   length = strlen (s);
   percent = length? pinentry_inq_quality (pinentry, s, length) : 0;
-  if (!length)
-    {
-      strcpy(textbuf, " ");
-    }
-  else if (percent < 0)
-    {
-      snprintf (textbuf, sizeof textbuf, "(%d%%)", -percent);
-      textbuf[sizeof textbuf -1] = 0;
-      percent = -percent;
-    }
-  else
-    {
-      snprintf (textbuf, sizeof textbuf, "%d%%", percent);
-      textbuf[sizeof textbuf -1] = 0;
-    }
   evas_object_color_set(qualitybar, 255 - ( 2.55 * percent ), 2.55 * percent, 0, 255);
   elm_progressbar_value_set (qualitybar, (double) percent / 100.0);
-  elm_object_text_set (qualitybar, textbuf);
 }
 
 static void
@@ -336,14 +319,8 @@ create_window (pinentry_t ctx)
           evas_object_show(obj);
 
 	  qualitybar = elm_progressbar_add(table);
-          elm_object_text_set(qualitybar," ");
           evas_object_color_set(qualitybar, 255, 0, 0, 255);
           evas_object_show(qualitybar);
-	  elm_progressbar_unit_format_set (qualitybar, "%");
-/*
-          elm_progressbar_pulse_set(qualitybar, EINA_TRUE);
-          elm_progressbar_pulse(qualitybar, EINA_TRUE);
-*/
           if (pinentry->quality_bar_tt)
 	    elm_object_tooltip_text_set (qualitybar,
 					 pinentry->quality_bar_tt);

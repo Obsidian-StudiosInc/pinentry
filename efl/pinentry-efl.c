@@ -223,13 +223,24 @@ create_window (pinentry_t ctx)
       free (txt);
     }
 
+  /* Description Label */
   if (pinentry->description)
     {
-      /* Description Label */
+      char* aligned;
+      int len;
+
       obj = elm_label_add(table);
       elm_label_line_wrap_set (obj, ELM_WRAP_WORD);
       txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->description);
-      elm_object_text_set(obj,txt);
+      len = strlen(txt)+20; // 20 chars for align tag
+      aligned = calloc(len+1,sizeof(char));
+      if(aligned)
+        {
+          snprintf(aligned,len, "<align=left>%s</align>",txt);
+          elm_object_text_set(obj,aligned);
+          free (aligned);
+        } else
+          elm_object_text_set(obj,txt);
       free (txt);
       evas_object_size_hint_weight_set(obj, EVAS_HINT_EXPAND, 0);
       evas_object_size_hint_align_set(obj, EVAS_HINT_FILL, 0);

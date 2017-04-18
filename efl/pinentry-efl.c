@@ -456,7 +456,7 @@ create_window (pinentry_t ctx)
   evas_object_show(win);
 
   if (pinentry->timeout > 0)
-    timer = ecore_timer_add (pinentry->timeout, timeout_cb, pinentry);
+    timer = ecore_timer_add (pinentry->timeout, (Ecore_Task_Cb)timeout_cb, pinentry);
 }
 
 static int

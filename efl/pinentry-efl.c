@@ -126,7 +126,7 @@ changed_text_handler (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA
 static void
 on_check (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED)
 {
-    if(elm_check_selected_get(obj))
+    if(elm_check_state_get(obj))
     {
         elm_entry_password_set(entry, EINA_FALSE);
         elm_object_text_set(check_label,ENTRY_HIDE);

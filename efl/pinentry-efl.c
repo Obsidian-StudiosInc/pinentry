@@ -58,6 +58,9 @@
 #define VERSION
 #endif
 
+#define ENTRY_HIDE "Hide entry"
+#define ENTRY_SHOW "Show entry"
+
 static int pargc;
 static char **pargv;
 
@@ -68,7 +71,7 @@ typedef enum { CONFIRM_CANCEL, CONFIRM_OK, CONFIRM_NOTOK } confirm_value_t;
 static confirm_value_t confirm_value;
 static Eina_Bool got_input;
 static Ecore_Timer *timer;
-static Evas_Object *win, *entry, *error_label, *repeat_entry, *qualitybar;
+static Evas_Object *win, *entry, *error_label, *check_label, *repeat_entry, *qualitybar;
 static int confirm_mode;
 
 const static int WIDTH = 480;
@@ -124,9 +127,15 @@ static void
 on_check (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED)
 {
     if(elm_check_selected_get(obj))
+    {
         elm_entry_password_set(entry, EINA_FALSE);
+        elm_object_text_set(check_label,ENTRY_HIDE);
+    }
     else
+    {
         elm_entry_password_set(entry, EINA_TRUE);
+        elm_object_text_set(check_label,ENTRY_SHOW);
+    }
 }
 
 static void
@@ -308,12 +317,12 @@ create_window (pinentry_t ctx)
       evas_object_show(obj);
 
       /* Check Label */
-      obj = elm_label_add(table);
-      elm_object_text_set(obj,"Make visible");
-      evas_object_size_hint_weight_set(obj, 0, 0);
-      evas_object_size_hint_align_set(obj, 0, 0);
-      elm_table_pack(table, obj, 2, row, 4, 1);
-      evas_object_show(obj);
+      check_label = elm_label_add(table);
+      elm_object_text_set(check_label,ENTRY_SHOW);
+      evas_object_size_hint_weight_set(check_label, 0, 0);
+      evas_object_size_hint_align_set(check_label, 0, 0);
+      elm_table_pack(table, check_label, 2, row, 4, 1);
+      evas_object_show(check_label);
       row++;
 
       if (pinentry->quality_bar)

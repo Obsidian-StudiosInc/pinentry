@@ -61,23 +61,24 @@
 #define ENTRY_HIDE "Hide entry"
 #define ENTRY_SHOW "Show entry"
 
-static int pargc;
-static char **pargv;
-
-static pinentry_t pinentry;
-static int grab_failed;
-static int passphrase_ok;
 typedef enum { CONFIRM_CANCEL, CONFIRM_OK, CONFIRM_NOTOK } confirm_value_t;
-static confirm_value_t confirm_value;
-static Eina_Bool got_input;
-static Ecore_Timer *timer;
-static Evas_Object *win, *entry, *error_label, *check_label, *repeat_entry, *qualitybar;
-static int confirm_mode;
 
 const static int WIDTH = 480;
 const static int BUTTON_HEIGHT = 27;
 const static int BUTTON_WIDTH = 60;
 const static int PADDING = 5;
+
+static Eina_Bool got_input;
+static Ecore_Timer *timer;
+static Evas_Object *error_label, *check_label;
+static Evas_Object *win, *entry, *repeat_entry, *qualitybar;
+static char **pargv;
+static int grab_failed;
+static int passphrase_ok;
+static int confirm_mode;
+static int pargc;
+static confirm_value_t confirm_value;
+static pinentry_t pinentry;
 
 static void
 quit ()
@@ -97,7 +98,9 @@ delete_event (void *data EINA_UNUSED,
 }
 
 static void
-changed_text_handler (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED)
+changed_text_handler (void *data EINA_UNUSED,
+                      Evas_Object *obj,
+                      void *event EINA_UNUSED)
 {
   const char *s;
   int length;
@@ -119,7 +122,9 @@ changed_text_handler (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA
     s = "";
   length = strlen (s);
   percent = length? pinentry_inq_quality (pinentry, s, length) : 0;
-  evas_object_color_set(qualitybar, 255 - ( 2.55 * percent ), 2.55 * percent, 0, 255);
+  evas_object_color_set(qualitybar,
+                        255 - ( 2.55 * percent ),
+                        2.55 * percent, 0, 255);
   elm_progressbar_value_set (qualitybar, (double) percent / 100.0);
 }
 
@@ -217,10 +222,15 @@ create_window (pinentry_t ctx)
   evas_object_smart_callback_add(win, "delete,request", delete_event, NULL);
 
   table = elm_table_add(win);
-  elm_obj_table_padding_set(table, ELM_SCALE_SIZE(PADDING), ELM_SCALE_SIZE(PADDING));
+  elm_obj_table_padding_set(table,
+                            ELM_SCALE_SIZE(PADDING),
+                            ELM_SCALE_SIZE(PADDING));
   evas_object_size_hint_min_set(table, ELM_SCALE_SIZE(WIDTH), 1);
-  evas_object_size_hint_padding_set (table, ELM_SCALE_SIZE(PADDING), ELM_SCALE_SIZE(PADDING),
-                                     ELM_SCALE_SIZE(PADDING), ELM_SCALE_SIZE(PADDING));
+  evas_object_size_hint_padding_set (table,
+                                     ELM_SCALE_SIZE(PADDING),
+                                     ELM_SCALE_SIZE(PADDING),
+                                     ELM_SCALE_SIZE(PADDING),
+                                     ELM_SCALE_SIZE(PADDING));
   evas_object_show(table);
 
   if (pinentry->title)
@@ -299,13 +309,18 @@ create_window (pinentry_t ctx)
 
       entry = elm_entry_add(table);
       elm_entry_scrollable_set(entry, EINA_TRUE);
-      elm_scroller_policy_set(entry, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_OFF);
+      elm_scroller_policy_set(entry, 
+                              ELM_SCROLLER_POLICY_OFF,
+                              ELM_SCROLLER_POLICY_OFF);
       elm_entry_password_set(entry, EINA_TRUE);
       elm_entry_single_line_set(entry, EINA_TRUE);
       evas_object_size_hint_weight_set(entry, 0, 0);
       evas_object_size_hint_align_set(entry, EVAS_HINT_FILL, 0);
       elm_table_pack(table, entry, 2, row, 4, 1);
-      evas_object_smart_callback_add(entry, "changed", changed_text_handler, NULL);
+      evas_object_smart_callback_add(entry,
+                                     "changed",
+                                     changed_text_handler,
+                                     NULL);
       evas_object_show(entry);
       row++;
 
@@ -329,7 +344,8 @@ create_window (pinentry_t ctx)
 	{
           /* Quality Bar Label */
 	  obj = elm_label_add(table);
-          txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->quality_bar);
+          txt = pinentry_utf8_to_local (pinentry->lc_ctype,
+                                        pinentry->quality_bar);
           elm_object_text_set(obj,txt);
           free (txt);
           evas_object_size_hint_weight_set(obj, 0, 0);
@@ -355,7 +371,9 @@ create_window (pinentry_t ctx)
                                         pinentry->repeat_passphrase);
           repeat_entry = elm_entry_add(table);
           elm_entry_scrollable_set(repeat_entry, EINA_TRUE);
-          elm_scroller_policy_set(repeat_entry, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_OFF);
+          elm_scroller_policy_set(repeat_entry,
+                                  ELM_SCROLLER_POLICY_OFF,
+                                  ELM_SCROLLER_POLICY_OFF);
           elm_entry_password_set(repeat_entry, EINA_TRUE);
           elm_entry_single_line_set(repeat_entry, EINA_TRUE);
           elm_object_text_set(repeat_entry,txt);
@@ -368,7 +386,10 @@ create_window (pinentry_t ctx)
 	  free (txt);
           row++;
         }
-      evas_object_smart_callback_add (entry, "activated", enter_callback, repeat_entry);
+      evas_object_smart_callback_add (entry,
+                                      "activated",
+                                      enter_callback,
+                                      repeat_entry);
       elm_object_focus_set (entry, EINA_TRUE);
   }
 
@@ -386,7 +407,8 @@ create_window (pinentry_t ctx)
         {
           Evas_Object *ic;
 
-          txt = pinentry_utf8_to_local (pinentry->lc_ctype, pinentry->default_cancel);
+          txt = pinentry_utf8_to_local (pinentry->lc_ctype,
+                                        pinentry->default_cancel);
           elm_object_text_set(obj,txt);
           free (txt);
           ic = elm_image_add (win);
@@ -398,9 +420,14 @@ create_window (pinentry_t ctx)
       else
         elm_object_text_set(obj, "Cancel"); //STOCK_CANCEL
       evas_object_size_hint_align_set(obj, 0, 0);
-      evas_object_size_hint_min_set(obj, ELM_SCALE_SIZE(BUTTON_WIDTH), ELM_SCALE_SIZE(BUTTON_HEIGHT));
+      evas_object_size_hint_min_set(obj,
+                                    ELM_SCALE_SIZE(BUTTON_WIDTH),
+                                    ELM_SCALE_SIZE(BUTTON_HEIGHT));
       elm_table_pack(table, obj, 4, row, 1, 1);
-      evas_object_smart_callback_add(obj, "clicked", on_click, (void *) CONFIRM_CANCEL);
+      evas_object_smart_callback_add(obj,
+                                     "clicked",
+                                     on_click,
+                                     (void *) CONFIRM_CANCEL);
       evas_object_show(obj);
     }
 
@@ -428,7 +455,9 @@ create_window (pinentry_t ctx)
   else
     elm_object_text_set(obj,"OK"); //STOCK_OK
   evas_object_size_hint_align_set(obj, 0, 0);
-  evas_object_size_hint_min_set(obj, ELM_SCALE_SIZE(BUTTON_WIDTH), ELM_SCALE_SIZE(BUTTON_HEIGHT));
+  evas_object_size_hint_min_set(obj,
+                                ELM_SCALE_SIZE(BUTTON_WIDTH),
+                                ELM_SCALE_SIZE(BUTTON_HEIGHT));
   elm_table_pack(table, obj, 5, row, 1, 1);
   evas_object_smart_callback_add(obj, "clicked", on_click, (void *) CONFIRM_OK);
   evas_object_show(obj);
@@ -444,7 +473,9 @@ create_window (pinentry_t ctx)
         ic_size = ic_size/3.5;
       else if(row<4)
         ic_size = ic_size - ic_size/row;
-      evas_object_size_hint_min_set(obj, ELM_SCALE_SIZE(ic_size), ELM_SCALE_SIZE(ic_size));
+      evas_object_size_hint_min_set(obj, 
+                                    ELM_SCALE_SIZE(ic_size),
+                                    ELM_SCALE_SIZE(ic_size));
       evas_object_size_hint_weight_set(obj, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
       evas_object_size_hint_align_set(obj, EVAS_HINT_FILL, 0.5);
       elm_table_pack(table, obj, 0, 0, 1, row? row:1);
@@ -464,7 +495,9 @@ create_window (pinentry_t ctx)
   evas_object_show(win);
 
   if (pinentry->timeout > 0)
-    timer = ecore_timer_add (pinentry->timeout, (Ecore_Task_Cb)timeout_cb, pinentry);
+    timer = ecore_timer_add (pinentry->timeout,
+                             (Ecore_Task_Cb)timeout_cb,
+                             pinentry);
 }
 
 static int

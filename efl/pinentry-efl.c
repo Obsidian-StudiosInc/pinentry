@@ -80,6 +80,8 @@ static int pargc;
 static confirm_value_t confirm_value;
 static pinentry_t pinentry;
 
+pinentry_cmd_handler_t pinentry_cmd_handler;
+
 static void
 quit ()
 {
@@ -540,22 +542,30 @@ efl_cmd_handler (pinentry_t pe)
     return (confirm_value == CONFIRM_OK) ? 1 : 0;
 }
 
-pinentry_cmd_handler_t pinentry_cmd_handler = efl_cmd_handler;
-
 int
 main (int argc, char *argv[])
 {
   pinentry_init (PGMNAME);
 
 #ifdef FALLBACK_CURSES
-  if (!pinentry_have_display (argc, argv))
-    pinentry_cmd_handler = curses_cmd_handler;
+  if (pinentry_have_display (argc, argv))
+    {
 #endif
 
-  pinentry_parse_opts (argc, argv);
+  pinentry_cmd_handler = efl_cmd_handler;
   pargc = argc;
   pargv = argv;
 
+#ifdef FALLBACK_CURSES
+    }
+  else
+    {
+      pinentry_cmd_handler = curses_cmd_handler;
+      //pinentry_set_flavor_flag ("curses");
+    }
+#endif
+
+  pinentry_parse_opts (argc, argv);
   if (pinentry_loop ())
     return 1;
 

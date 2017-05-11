@@ -219,7 +219,7 @@ create_window (pinentry_t ctx)
   Evas_Object *table, *obj;
   int row = 0;
 
-  win = elm_win_util_standard_add("pinentry","enter pin");
+  win = elm_win_util_dialog_add(NULL,"pinentry","enter pin");
   elm_win_autodel_set(win, EINA_TRUE);
   evas_object_smart_callback_add(win, "delete,request", delete_event, NULL);
 
@@ -492,9 +492,8 @@ create_window (pinentry_t ctx)
   evas_object_show (obj);
 
   elm_win_resize_object_add(win,obj);
-  elm_win_center(win,EINA_TRUE,EINA_TRUE);
-  elm_win_layer_set(win,10);
   evas_object_show(win);
+  elm_win_center(win,EINA_TRUE,EINA_TRUE);
 
   if (pinentry->timeout > 0)
     timer = ecore_timer_add (pinentry->timeout,

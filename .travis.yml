@@ -1,0 +1,34 @@
+language: c
+compiler: gcc
+sudo: required
+dist: trusty
+env:
+  global:
+    - secure: "N40Jg3x/wxDN7NtbTyHHF3SpEy8upzLEsxUQzJ5mvrkgeT66p45pziBxZHZeqCfCyIAz5tBLIWoOIk59laIg4octdCK+hdx7AFE6kkurLi7kiD+emnVEfspSpa4FKk5L5FUfsRNirKVeeS5OP782UREQSSalCzv3Z/qlbuXujFTwRArnSweSx5OCfP1PhEI+usaw/njRPO6UqiQ566bLgzuCG15YAqVfMkuCziclX7a75FZqniUNXV1aDVRiiqJylZAzqeLPkOdaWv5T8tHOZ7SI2nT10BbW3/hhtgjBWg4wUdW/5MbiXd7X6fUQHFL+DcbwHIQ/2Pg8Hg/RrV654L9xgGziYoCpxwxrJ9asJvftoMqxkxE/N+C+X+KNFTYORfoIG0o8GWrwMpLrwrigyY1IsfuB1hG0+Dp0yqpNqimSoP57Xk7QubwSQhq96iRY5AIbar4uBtiEn0RIsIxTicXQQKhmfZvXZ9Mm6I+qTPpitsIvYKfqtv8/lXfA1Zi5k8jOc7E4lszNDv1Jqqo9FwIyv0YziMfZMTy3SgUqVxlznJ4V8+XBdo4qQ9o1m6WAz3A2fTtITFUROhDvDdhR51qgpFDGLu4SXUdvWLpy6VNvGmv3j5gBzPn1uvQRaSbfvqK6fb1aWvd46FSxJ9VMmzZmq9/VoM1+mLH1ROiQfD0="
+  matrix:
+    - MY_PV=1.1.0
+
+before_install:
+  - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+
+install:
+  - sudo add-apt-repository -y ppa:niko2040/e19
+  - sudo apt-get -qq update
+  - sudo apt-get install -y gettext libc6-dbg libefl libefl-dbg libefl-dev
+
+script:
+  - ./configure --enable-libsecret --enable-pinentry-curses --enable-pinentry-efl --enable-pinentry-tty --disable-pinentry-fltk --disable-pinentry-gtk2 --disable-pinentry-gnome3
+  - make
+
+notifications:
+  email: false
+
+addons:
+  coverity_scan:
+    project:
+      name: Obsidian-StudiosInc/pinentry
+      description: Build submitted via Travis CI
+    notification_email: wlt@o-sinc.com
+    build_command_prepend: make clean
+    build_command: make -j4
+    branch_pattern: master

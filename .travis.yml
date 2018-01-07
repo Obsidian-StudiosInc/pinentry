@@ -14,7 +14,7 @@ before_install:
 install:
   - sudo add-apt-repository -y ppa:niko2040/e19
   - sudo apt-get -qq update
-  - sudo apt-get install -y gettext libc6-dbg libefl libefl-dbg libefl-dev libgpg-error0 libgpg-error0-udeb libgpg-error-dev libassuan0 libassuan-dev
+  - sudo apt-get install -y gettext libc6-dbg libefl libefl-dbg libefl-dev libgpg-error0  libgpg-error-dev libgpg-error-dev-dbgsym libassuan0 libassuan-dev
 
 script:
   - ./autogen.sh

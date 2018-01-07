@@ -21,7 +21,7 @@ install:
 
 script:
   - ./autogen.sh
-  - ./configure --enable-libsecret --enable-pinentry-curses --enable-pinentry-efl --enable-pinentry-tty --disable-pinentry-fltk --disable-pinentry-gtk2 --disable-pinentry-gnome3
+  - ./configure --enable-libsecret --enable-pinentry-curses --enable-pinentry-efl --enable-pinentry-tty --disable-pinentry-fltk --disable-pinentry-gtk2 --disable-pinentry-gnome3 --disable-pinentry-qt
   - make
 
 notifications:

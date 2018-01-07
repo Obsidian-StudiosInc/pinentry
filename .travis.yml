@@ -20,6 +20,10 @@ install:
   - sudo dpkg -i *.deb
 
 script:
+  - echo "@set UPDATED "`date +"%d %B %Y"`"" > doc/version.texi
+  - echo "@set UPDATED-MONTH "`date +"%d %B"`"" >> doc/version.texi
+  - echo "@set EDITION ${MY_PV}" >> doc/version.texi
+  - echo "@set VERSION ${MY_PV}" >> doc/version.texi
   - ./autogen.sh
   - ./configure --enable-libsecret --enable-pinentry-curses --enable-pinentry-efl --enable-pinentry-tty --disable-pinentry-fltk --disable-pinentry-gtk2 --disable-pinentry-gnome3 --disable-pinentry-qt
   - make

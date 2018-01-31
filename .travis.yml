@@ -31,7 +31,7 @@ jobs:
             name: Obsidian-StudiosInc/pinentry
             description: Build submitted via Travis CI
           notification_email: wlt@o-sinc.com
-          build_command_prepend: "autoreconf -f -i && automake && ./configure ${OPTS}; make clean"
+          build_command_prepend: "autoreconf -f -i && automake && ./configure; make clean"
           build_command: make -j4
           branch_pattern: master
 

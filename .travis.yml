@@ -40,8 +40,7 @@ script:
   - echo "@set UPDATED-MONTH "`date +"%d %B"`"" >> doc/version.texi
   - echo "@set EDITION ${MY_PV}" >> doc/version.texi
   - echo "@set VERSION ${MY_PV}" >> doc/version.texi
-  - ./autogen.sh
-  - ./configure ${OPTS} && make
+  - autoreconf -f -i && automake && ./configure ${OPTS} && make
 
 notifications:
   email: false

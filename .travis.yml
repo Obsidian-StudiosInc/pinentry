@@ -4,8 +4,6 @@ sudo: required
 dist: trusty
 env:
   global:
-    - secure: "N40Jg3x/wxDN7NtbTyHHF3SpEy8upzLEsxUQzJ5mvrkgeT66p45pziBxZHZeqCfCyIAz5tBLIWoOIk59laIg4octdCK+hdx7AFE6kkurLi7kiD+emnVEfspSpa4FKk5L5FUfsRNirKVeeS5OP782UREQSSalCzv3Z/qlbuXujFTwRArnSweSx5OCfP1PhEI+usaw/njRPO6UqiQ566bLgzuCG15YAqVfMkuCziclX7a75FZqniUNXV1aDVRiiqJylZAzqeLPkOdaWv5T8tHOZ7SI2nT10BbW3/hhtgjBWg4wUdW/5MbiXd7X6fUQHFL+DcbwHIQ/2Pg8Hg/RrV654L9xgGziYoCpxwxrJ9asJvftoMqxkxE/N+C+X+KNFTYORfoIG0o8GWrwMpLrwrigyY1IsfuB1hG0+Dp0yqpNqimSoP57Xk7QubwSQhq96iRY5AIbar4uBtiEn0RIsIxTicXQQKhmfZvXZ9Mm6I+qTPpitsIvYKfqtv8/lXfA1Zi5k8jOc7E4lszNDv1Jqqo9FwIyv0YziMfZMTy3SgUqVxlznJ4V8+XBdo4qQ9o1m6WAz3A2fTtITFUROhDvDdhR51qgpFDGLu4SXUdvWLpy6VNvGmv3j5gBzPn1uvQRaSbfvqK6fb1aWvd46FSxJ9VMmzZmq9/VoM1+mLH1ROiQfD0="
-  matrix:
     - MY_PV=1.1.0
 
 before_install:
@@ -19,24 +17,30 @@ install:
   - wget https://launchpad.net/ubuntu/+source/libgpg-error/1.27-3/+build/12813907/+files/libgpg-error-dev_1.27-3_amd64.deb
   - sudo dpkg -i *.deb
 
+jobs:
+  include:
+    - stage: Test builds
+      env: OPTS="--enable-libsecret --enable-pinentry-curses --enable-pinentry-efl --enable-pinentry-tty --disable-pinentry-fltk --disable-pinentry-gtk2 --disable-pinentry-gnome3 --disable-pinentry-qt"
+    - stage: Coverity
+      env:
+        - secure: "N40Jg3x/wxDN7NtbTyHHF3SpEy8upzLEsxUQzJ5mvrkgeT66p45pziBxZHZeqCfCyIAz5tBLIWoOIk59laIg4octdCK+hdx7AFE6kkurLi7kiD+emnVEfspSpa4FKk5L5FUfsRNirKVeeS5OP782UREQSSalCzv3Z/qlbuXujFTwRArnSweSx5OCfP1PhEI+usaw/njRPO6UqiQ566bLgzuCG15YAqVfMkuCziclX7a75FZqniUNXV1aDVRiiqJylZAzqeLPkOdaWv5T8tHOZ7SI2nT10BbW3/hhtgjBWg4wUdW/5MbiXd7X6fUQHFL+DcbwHIQ/2Pg8Hg/RrV654L9xgGziYoCpxwxrJ9asJvftoMqxkxE/N+C+X+KNFTYORfoIG0o8GWrwMpLrwrigyY1IsfuB1hG0+Dp0yqpNqimSoP57Xk7QubwSQhq96iRY5AIbar4uBtiEn0RIsIxTicXQQKhmfZvXZ9Mm6I+qTPpitsIvYKfqtv8/lXfA1Zi5k8jOc7E4lszNDv1Jqqo9FwIyv0YziMfZMTy3SgUqVxlznJ4V8+XBdo4qQ9o1m6WAz3A2fTtITFUROhDvDdhR51qgpFDGLu4SXUdvWLpy6VNvGmv3j5gBzPn1uvQRaSbfvqK6fb1aWvd46FSxJ9VMmzZmq9/VoM1+mLH1ROiQfD0="
+      addons:
+        coverity_scan:
+          project:
+            name: Obsidian-StudiosInc/pinentry
+            description: Build submitted via Travis CI
+          notification_email: wlt@o-sinc.com
+          build_command_prepend: make clean
+          build_command: make -j4
+          branch_pattern: master
+
 script:
   - echo "@set UPDATED "`date +"%d %B %Y"`"" > doc/version.texi
   - echo "@set UPDATED-MONTH "`date +"%d %B"`"" >> doc/version.texi
   - echo "@set EDITION ${MY_PV}" >> doc/version.texi
   - echo "@set VERSION ${MY_PV}" >> doc/version.texi
   - ./autogen.sh
-  - ./configure --enable-libsecret --enable-pinentry-curses --enable-pinentry-efl --enable-pinentry-tty --disable-pinentry-fltk --disable-pinentry-gtk2 --disable-pinentry-gnome3 --disable-pinentry-qt
-  - make
+  - ./configure ${OPTS} && make
 
 notifications:
   email: false
-
-addons:
-  coverity_scan:
-    project:
-      name: Obsidian-StudiosInc/pinentry
-      description: Build submitted via Travis CI
-    notification_email: wlt@o-sinc.com
-    build_command_prepend: make clean
-    build_command: make -j4
-    branch_pattern: master

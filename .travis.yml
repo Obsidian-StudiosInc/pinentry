@@ -36,7 +36,7 @@ jobs:
           branch_pattern: master
 
 script:
-  - ./.travis-prep.sh ${OPTS} && make
+  - if [ "${COVERITY_SCAN_BRANCH}" = "1" ]; then true; else ./.travis-prep.sh ${OPTS} && make; fi
 
 notifications:
   email: false

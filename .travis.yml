@@ -31,12 +31,12 @@ jobs:
             name: Obsidian-StudiosInc/pinentry
             description: Build submitted via Travis CI
           notification_email: wlt@o-sinc.com
-          build_command_prepend: "./travis-prep.sh ${OPTS}"
+          build_command_prepend: "./.travis-prep.sh ${OPTS}"
           build_command: make -j4
           branch_pattern: master
 
 script:
-  - ./travis-prep.sh ${OPTS} && make
+  - ./.travis-prep.sh ${OPTS} && make
 
 notifications:
   email: false

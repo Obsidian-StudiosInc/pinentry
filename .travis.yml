@@ -25,6 +25,7 @@ jobs:
     - stage: Sonar Cloud
       env:
         - OPTS="--enable-libsecret --enable-pinentry-curses --enable-pinentry-efl --enable-pinentry-tty --disable-pinentry-fltk --disable-pinentry-gtk2 --disable-pinentry-gnome3 --disable-pinentry-qt"
+	- SONAR="0"
       addons:
         sonarcloud:
           organization: obsidian-studiosinc-github

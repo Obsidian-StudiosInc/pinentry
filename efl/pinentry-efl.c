@@ -71,8 +71,12 @@ static const int PADDING = 5;
 
 static Eina_Bool got_input;
 static Ecore_Timer *timer;
-static Evas_Object *error_label, *check_label;
-static Evas_Object *win, *entry, *repeat_entry, *qualitybar;
+static Evas_Object *check_label;
+static Evas_Object *error_label;
+static Evas_Object *entry;
+static Evas_Object *repeat_entry;
+static Evas_Object *qualitybar;
+static Evas_Object *win;
 static char **pargv;
 static int grab_failed;
 static int passphrase_ok;
@@ -144,9 +148,6 @@ on_check (void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED)
         elm_entry_password_set(entry, EINA_TRUE);
         elm_object_text_set(check_label,ENTRY_SHOW);
     }
-/*
-  evas_object_size_hint_weight_set(check_label, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-*/
   evas_object_size_hint_min_set(check_label,
                                 ELM_SCALE_SIZE(BUTTON_WIDTH),
                                 ELM_SCALE_SIZE(BUTTON_HEIGHT));

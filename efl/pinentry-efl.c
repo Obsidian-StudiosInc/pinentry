@@ -166,7 +166,8 @@ on_click (void *data, Evas_Object *obj EINA_UNUSED, void *event EINA_UNUSED)
 
   if (data)
     {
-      const char *s, *s2;
+      const char *s;
+      const char *s2;
 
       s = elm_entry_entry_get (entry);
       if (!s)
@@ -225,7 +226,9 @@ static void
 create_window (void)
 {
   char *txt;
-  Evas_Object *table, *icon, *obj;
+  Evas_Object *icon;
+  Evas_Object *obj;
+  Evas_Object *table;
   int btn_txt_len = 0;
   int row = 0;
   int ok_len = 0;
@@ -609,7 +612,6 @@ main (int argc, char *argv[])
   else
     {
       pinentry_cmd_handler = curses_cmd_handler;
-      //pinentry_set_flavor_flag ("curses");
     }
 #endif
 

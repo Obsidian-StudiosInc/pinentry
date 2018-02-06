@@ -34,8 +34,8 @@ script:
   - echo "@set VERSION ${MY_PV}" >> doc/version.texi
   - ./autogen.sh
   - ./configure ${OPTS}
-  - if [ "${SONAR}" = "0" ]; then build-wrapper-linux-x86-64 --out-dir bw-output make ${OPTS}; fi
-  - if [ "${SONAR}" = "0" ]; then sonar-scanner; else make ${OPTS}; fi
+  - if [ "${SONAR}" = "0" ]; then build-wrapper-linux-x86-64 --out-dir bw-output make; fi
+  - if [ "${SONAR}" = "0" ]; then sonar-scanner; else make; fi
 
 notifications:
   email: false

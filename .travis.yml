@@ -6,9 +6,6 @@ env:
   global:
     - MY_PV=1.1.0
 
-before_install:
-  - if [ "${COVERITY_SCAN_BRANCH}" = "1" ]; then echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt ; fi
-
 install:
   - sudo add-apt-repository -y ppa:niko2040/e19
   - sudo apt-get -qq update
@@ -21,22 +18,24 @@ jobs:
   include:
     - stage: Test builds
       env: OPTS="--enable-libsecret --enable-pinentry-curses --enable-pinentry-efl --enable-pinentry-tty --disable-pinentry-fltk --disable-pinentry-gtk2 --disable-pinentry-gnome3 --disable-pinentry-qt"
-    - stage: Coverity
+    - stage: Sonar Cloud
       env:
-        - secure: x5YM8jcfL9pjgeiyutHUsEOCQ0QL+7mTFb3ppufClYZVfADq2vADSKGtwdPFKy8hP8qX6259oUUA6b7jQXc9UibsaS2LQbHFeT1IrG5h8HqfwVgwItwm14mXcITDz8AT6weK8UwyPgCUJUa1ZG5+LWFhQprJBd6THWQQKTG1P/l1yqd5XjPucnNHxbSv5wZfacADaGY7RnxegEKS/2pRgilcew9EtQezSxQh1Ys+fibu0xNmh+IKROnqekqgquS8PwC3Oink+KxB9hYjZ62Z0Ky13MjLLU7ECHjd5T0W45cDy2MKeJbNGkK+GDChphIVjZwuYnJ3s0huaQSz9OCzNy9TilSRG86l+1QeBcJdjutqxhTjibSpkNv47frZFNh/D2TtyVtovBzegHph4zeSEzByXWoeCFiUbZ0p4iW29xobDRTYc05jGuAEyW3n1E0KaWEb4S0+vkr3XRbybPM1UU7sZP+igoJ24v53aEixSddjTTsOIU+CpIkOAc7iIs0G5hpqCcWCaRXEkyuQWv/WIHl77u3r03bKxhEbIsb+kt4WdlvcNWkhsaJpZWG22DWNbiQoWgZd2E7OCm2Oo0lDObwdjBRdYN+yGw3yQe82ZOSpImPIxucBUWBhjPxZsafThyDJ78yqgY2/eLxqx4HCIzpO7sp+MOK4RBsHzu/b+Og=
         - OPTS="--enable-libsecret --enable-pinentry-curses --enable-pinentry-efl --enable-pinentry-tty --disable-pinentry-fltk --disable-pinentry-gtk2 --disable-pinentry-gnome3 --disable-pinentry-qt"
       addons:
-        coverity_scan:
-          project:
-            name: Obsidian-StudiosInc/pinentry
-            description: Build submitted via Travis CI
-          notification_email: wlt@o-sinc.com
-          build_command_prepend: "./.travis-prep.sh ${OPTS}"
-          build_command: make -j4
-          branch_pattern: master
+        sonarcloud:
+          organization: obsidian-studiosinc-github
+          token:
+            secure: SrsitQEglRTCLcEQ7mIsSR9zL4qdNM8OzBdvN/2yWn//YM437R4beZGZEGw7OAifa9/VzEVddqXmAz3B6HRSyawy1PEKA2i/xF0/pHw/UMoEtGiKK34XES4VDt6DcOzY6k2CXBTEO/rWo+XtF2GBpvWtTc47UmBF1J70TEkbORZkuKbIYjDmLz0tK//3b/FPWFtHyHHWMfJVyvQ38Hr2u22HyUueaFAdk3ZlUT/10sxuka47fn8wMVB5Kv6Dfnb0DNSW3yO4U0A84Td3+Mt8B7AmVEvQ3AczWIDK+UTiWul5j91PLOnh7aJRq/aRlZsFCNOJH8X/U62YGqCVtfmpEl3/3z/asibExsL8KXQ9Y6BfqXTaJfHAU17Az9o6g2hJcnyitTkvLZe0RMIW+bKdi/pyL79Ji778x9RNfEjVzBzSSf8UrpY9WP5PG8zNkT6Vy0+KwSc03PRv7obiB59mdO8iJJ8yVDyerF93juo3INiFUu5WQoge5HTncP6PPJCHpCklbrqQioODzh/1TwvfpjUgzNZcPBwXcRznXYicLVgE+Ph7Jb6TyBg0Vw6sESWpD8X64NLl3H03ZAsJfzZYT5l99VpNH7L9e28v2IogVaOKSCOCgH1vdALS/2V8GfAtBOh4pHXcQ0FaEd9iM7gXupduGzOt3FS+epXPSgvdhSs=
 
 script:
-  - if [ "${COVERITY_SCAN_BRANCH}" = "1" ]; then true; else ./.travis-prep.sh ${OPTS} && make; fi
+  - echo "@set UPDATED "`date +"%d %B %Y"`"" > doc/version.texi
+  - echo "@set UPDATED-MONTH "`date +"%d %B"`"" >> doc/version.texi
+  - echo "@set EDITION ${MY_PV}" >> doc/version.texi
+  - echo "@set VERSION ${MY_PV}" >> doc/version.texi
+  - ./autogen.sh
+  - ./configure ${OPTS}
+  - if [ "${SONAR}" = "0" ]; then build-wrapper-linux-x86-64 --out-dir bw-output make ${OPTS}; fi
+  - if [ "${SONAR}" = "0" ]; then sonar-scanner; else make ${OPTS}; fi
 
 notifications:
   email: false

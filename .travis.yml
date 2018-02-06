@@ -6,6 +6,10 @@ env:
   global:
     - MY_PV=1.1.0
 
+cache:
+  directories:
+    - $HOME/.sonar/cache
+
 install:
   - sudo add-apt-repository -y ppa:niko2040/e19
   - sudo apt-get -qq update

@@ -192,7 +192,7 @@ on_click (void *data, Evas_Object *obj EINA_UNUSED, void *event EINA_UNUSED)
       passphrase_ok = 1;
       pinentry_setbufferlen (pinentry, strlen (s) + 1);
       if (pinentry->pin)
-	strcpy (pinentry->pin, s);
+	strncpy (pinentry->pin, s, strlen(s) + 1);
     }
   quit ();
 }
